@@ -1,0 +1,96 @@
+# ========================== CMake 核心忽略项 ==========================
+# CMake 生成的缓存文件
+CMakeCache.txt
+# CMake 构建目录（默认的 build 目录，可根据你的实际构建目录调整）
+build/
+cmake-build-*/  # CLion 默认构建目录
+# CMake 生成的文件/目录
+CMakeFiles/
+cmake_install.cmake
+Makefile
+CTestTestfile.cmake
+install_manifest.txt
+# 自动生成的编译命令文件（可选，若需要提交可注释）
+compile_commands.json
+# 模块相关临时文件
+*.mod
+*.mod.c
+
+# ========================== C++ 编译产物 ==========================
+# 目标文件（跨平台）
+*.o
+*.obj
+# 静态库
+*.a
+*.lib
+# 动态库/共享库
+*.so
+*.so.*
+*.dylib
+*.dll
+# 可执行文件
+*.exe
+*.out
+*.app
+# 调试文件
+*.pdb
+*.dSYM/  # macOS 调试符号目录
+*.stackdump  # Windows 崩溃转储文件
+# 预编译头
+*.pch
+# 编译依赖文件
+*.d
+
+# ========================== 编辑器/IDE 配置 ==========================
+# VSCode（你当前使用的编辑器）
+.vscode/
+# CLion/IntelliJ IDEA
+.idea/
+# Visual Studio
+.vs/
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+# Vim/Neovim
+*.swp
+*.swo
+*~
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+# 通用备份/临时文件
+*.bak
+*.tmp
+*.backup
+*.log  # 日志文件（若项目需要保留特定日志，可注释此行）
+
+# ========================== 系统/平台临时文件 ==========================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+# Windows
+Thumbs.db
+Desktop.ini
+# Linux
+*.pid
+*.socket
+
+# ========================== 调试工具相关 ==========================
+# AddressSanitizer/Valgrind 临时文件（你之前用到的 ASAN 相关）
+asan-symbolize
+*.asan.*
+# Valgrind 日志
+vgcore.*
+valgrind-*.log
+
+# ========================== 其他无关文件 ==========================
+# 自定义的配置文件（若有本地配置，可添加此处）
+*.conf.local
+*.ini.local
+# 测试/临时数据
+test_data/
+tmp/
+# 第三方依赖（若用 submodule 管理，可注释；若直接放在项目里，需忽略）
+3rdparty/build/
