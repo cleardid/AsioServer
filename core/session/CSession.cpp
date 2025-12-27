@@ -65,7 +65,8 @@ void CSession::Send(const MessageHeader &header, const char *body, const uint32_
         std::memcpy(node->GetBody(), body, len);
     }
 
-    LOG_INFO << node->GetBody() << std::endl;
+    // 输出日志
+    node->Print();
 
     // 转网络字节序（只在发送前做一次）
     node->GetHeader().ToNetwork();

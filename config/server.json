@@ -1,5 +1,5 @@
 {
-    "port": 9998,
+    "port": 19998,
     "thread_pool_size": 2,
     "log_path": "../logs/server.log"
 }

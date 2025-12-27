@@ -126,6 +126,12 @@ void RegisterServices()
 
 int main()
 {
+
+#ifdef _WIN32
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+#endif
+
     try
     {
         // 初始化日志系统
@@ -158,7 +164,7 @@ int main()
     }
     catch (const std::exception &e)
     {
-        LOG_ERROR << e.what() << '\n';
+        LOG_FATAL << e.what() << '\n';
     }
 
     LOG_FATAL << "Server shutdown at " << __TIME__ << "\n";

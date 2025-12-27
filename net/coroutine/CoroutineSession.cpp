@@ -6,6 +6,7 @@
 #include "../../core/logic/LogicSystem.h"
 
 #include "../../infra/log/Logger.h"
+#include "../../infra/util/StringFormat.h"
 
 CoroutineSession::CoroutineSession(boost::asio::io_context &ioc, CServer *server)
     : CSession(ioc, server)
@@ -25,7 +26,7 @@ void CoroutineSession::Start()
                         this->_recvNode->Clear();
                         // 开始读取头部信息
                         std::size_t len = co_await boost::asio::async_read(this->_socket, boost::asio::buffer(this->_recvNode->GetHeaderData(), MsgNode::GetHeaderSize()), boost::asio::use_awaitable);
-                        std::cout << len << std::endl;
+                        LOG_INFO << len << std::endl;
                         if (len == 0)
                         {
                             LOG_ERROR << "CoroutineSession: Client Close a Connect." << std::endl;
@@ -60,9 +61,16 @@ void CoroutineSession::Start()
 
                     }
                  }
-                 catch (const std::exception &e)
+                 catch (boost::system::system_error& e)
                  {
-                     LOG_ERROR << e.what() << '\n';
+                    if (e.code().value() == 10054) {
+                        LOG_INFO << "客户端正常断开连接" << '\n';
+                    } 
+                    else 
+                    {
+                        LOG_ERROR << "网络错误 [" << e.code().value() << "]: " 
+                                << ConvertStringToUTF8(e.code().message()) << '\n';
+                    }
                      Close();
                      this->_server->DelSessionByUuid(this->_uuid);
                  } }, boost::asio::detached);

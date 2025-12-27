@@ -1,5 +1,6 @@
 
 #include "MsgNode.h"
+#include "../../infra/log/Logger.h"
 
 #include <sstream>
 #include <iomanip> // 用于 std::hex、std::setw、std::setfill
@@ -54,6 +55,8 @@ void MsgNode::Print() const
         << "请求序号=" << this->_header.seq
         << "]";
 
-    std::cout << oss.str() << std::endl;
-    std::cout << this->_body.data() << std::endl;
+    LOG_INFO << oss.str() << std::endl;
+    // 转为
+    LOG_INFO << "\n"
+             << this->_body.data() << std::endl;
 }
