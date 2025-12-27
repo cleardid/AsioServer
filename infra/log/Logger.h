@@ -1,4 +1,7 @@
 
+#ifndef LOGGER_H
+#define LOGGER_H
+
 #include <chrono>
 #include <thread>
 #include <string>
@@ -16,13 +19,13 @@
 #include "../../core/common/Const.h"
 #include "SafeQueue.h"
 
-#ifndef LOGGER_H
-#define LOGGER_H
+// 前置声明
+class LogStream;
 
 #define LOG_DEBUG LogStream(LogLevel::DEBUG, __FILE__, __LINE__)
 #define LOG_INFO LogStream(LogLevel::INFO, __FILE__, __LINE__)
 #define LOG_WARN LogStream(LogLevel::WARN, __FILE__, __LINE__)
-#define LOG_ERROR LogStream(LogLevel::ERROR, __FILE__, __LINE__)
+#define LOG_ERROR LogStream(LogLevel::MYERROR, __FILE__, __LINE__)
 #define LOG_FATAL LogStream(LogLevel::FATAL, __FILE__, __LINE__)
 
 // 日志事件

@@ -1,5 +1,6 @@
 
 #include "Logger.h"
+#include "../util/PathUtils.h"
 
 std::string PatternLayout::Format(const LogEvent &event)
 {
@@ -71,26 +72,47 @@ void FileAppender::OpenFile()
 {
     try
     {
-        // 提取文件目录
-        fs::path pathObj(this->_filePath);
-        fs::path dirPath = pathObj.parent_path();
+        fs::path logPath(this->_filePath);
 
+        // 相对路径 → 基于可执行文件目录
+        if (logPath.is_relative())
+        {
+            fs::path exeDir = util::GetExecutableDir();
+            logPath = exeDir / logPath;
+        }
+
+        // 规范化路径
+        logPath = fs::weakly_canonical(logPath);
+
+        fs::path dirPath = logPath.parent_path();
+
+        LOG_INFO << "Opening log file: " << logPath << '\n';
+        LOG_INFO << "Log directory: " << dirPath << '\n';
+
+        // 创建日志目录
         if (!dirPath.empty() && !fs::exists(dirPath))
         {
             fs::create_directories(dirPath);
-            LOG_WARN << "Created directory: " << dirPath << std::endl;
+            LOG_INFO << "Created log directory: " << dirPath << '\n';
         }
 
-        // 此方法不会创建目录，仅会创建文件
-        this->_fileStream.open(this->_filePath, std::ios::out | std::ios::app | std::ios::binary);
-        // 如果文件无法打开，抛出异常
-        if (!this->_fileStream.is_open() || !this->_fileStream.good())
+        // 打开文件（追加 + 二进制）
+        this->_fileStream.open(
+            logPath,
+            std::ios::out | std::ios::app | std::ios::binary);
+
+        if (!this->_fileStream.is_open())
         {
-            throw std::runtime_error("Failed to open log file: " + this->_filePath);
+            throw std::runtime_error(
+                "Failed to open log file: " + logPath.string());
         }
+
         // 获取当前文件大小
         this->_fileStream.seekp(0, std::ios::end);      // 移动到文件末尾
         this->_currentSize = this->_fileStream.tellp(); // 获取当前位置（即文件大小）
+
+        // 更新文件路径
+        this->_filePath = logPath.string();
     }
     catch (const std::exception &e)
     {

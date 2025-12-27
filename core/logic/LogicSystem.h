@@ -10,6 +10,7 @@
 #include <functional>
 #include <mutex>
 #include <iostream>
+#include <condition_variable>
 
 // 前置声明
 class LogicNode;

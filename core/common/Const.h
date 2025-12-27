@@ -2,6 +2,7 @@
 #ifndef CONST_H
 #define CONST_H
 
+#include <string>
 #include <cstddef>
 
 const std::size_t MAX_RECVQUE_LEN = 10000; // 最大接收队列长度
@@ -43,7 +44,7 @@ enum class LogLevel
     DEBUG = 1,
     INFO = 2,
     WARN = 3,
-    ERROR = 4,
+    MYERROR = 4,
     FATAL = 5
 };
 
@@ -60,7 +61,7 @@ inline std::string LogLevelToString(LogLevel level)
         return "INFO ";
     case LogLevel::WARN:
         return "WARN ";
-    case LogLevel::ERROR:
+    case LogLevel::MYERROR:
         return "ERROR";
     case LogLevel::FATAL:
         return "FATAL";
@@ -81,7 +82,7 @@ inline LogLevel StringToLogLevel(const std::string &str)
     if (str == "WARN")
         return LogLevel::WARN;
     if (str == "ERROR")
-        return LogLevel::ERROR;
+        return LogLevel::MYERROR;
     if (str == "FATAL")
         return LogLevel::FATAL;
     return LogLevel::INFO; // 默认

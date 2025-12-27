@@ -19,7 +19,7 @@ AsioIOServicePool::AsioIOServicePool(std::size_t size)
     // 赋值work，使得每个 work 管理各自的 iocontext
     for (size_t i = 0; i < size; i++)
     {
-        this->_works[i] = std::unique_ptr<Work>(new Work(this->_ioServices[i]));
+        this->_works[i] = std::make_unique<Work>(boost::asio::make_work_guard(this->_ioServices[i]));
     }
 
     // 开启各自的线程

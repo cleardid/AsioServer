@@ -2,6 +2,7 @@
 #include "ConfigReader.h"
 
 #include "../infra/log/Logger.h"
+#include "../infra/util/PathUtils.h"
 
 #include <functional>
 #include <memory>
@@ -141,18 +142,32 @@ bool ConfigReader::LoadConfig()
             return false;
         }
 
-        // 检查文件是否存在
-        if (!fs::exists(this->_configFilePath))
+        fs::path configPath(this->_configFilePath);
+
+        // 如果是相对路径 → 基于 exe 目录
+        if (configPath.is_relative())
         {
-            LOG_WARN << "Config file does not exist: " << this->_configFilePath << std::endl;
+            fs::path exeDir = util::GetExecutableDir();
+            configPath = exeDir / configPath;
+        }
+
+        // 规范化路径（不要求真实存在）
+        configPath = fs::weakly_canonical(configPath);
+
+        // 检查文件是否存在
+        if (!fs::exists(configPath))
+        {
+            // 输出当前执行目录
+            LOG_WARN << "Current working directory: " << fs::current_path() << std::endl;
+            LOG_WARN << "Config file does not exist: " << configPath << std::endl;
             return false;
         }
 
         // 打开配置文件
-        auto file = std::ifstream(this->_configFilePath, std::ios::in);
+        auto file = std::ifstream(configPath, std::ios::in);
         if (!file.is_open())
         {
-            LOG_WARN << "Failed to open config file: " << this->_configFilePath << std::endl;
+            LOG_WARN << "Failed to open config file: " << configPath << std::endl;
             return false;
         }
 
@@ -164,17 +179,20 @@ bool ConfigReader::LoadConfig()
         // 盼空
         if (j->empty())
         {
-            LOG_WARN << "Config file is empty: " << this->_configFilePath << std::endl;
+            LOG_WARN << "Config file is empty: " << configPath << std::endl;
             return false;
         }
 
-        // 更新配置数据
+        // 更新成员
+        this->_configFilePath = configPath.string();
         this->_configJson = std::move(j);
+
         return true;
     }
     catch (const std::exception &e)
     {
-        LOG_WARN << e.what() << '\n';
+        LOG_WARN << "LoadConfig exception: " << e.what() << '\n';
+        return false;
     }
 
     return false;
@@ -182,15 +200,16 @@ bool ConfigReader::LoadConfig()
 
 bool ConfigReader::ValidateConfigPath(const std::string &configPath) const
 {
-    // 判空
-    if (this->_configFilePath.empty())
+    // 检查配置文件路径是否为空
+    if (configPath.empty())
         return false;
 
-    // 获取文件后缀
-    auto ext = fs::path(this->_configFilePath).extension().string();
-    if (ext != ".json")
+    // 检查文件扩展名是否为 .json
+    fs::path p(configPath);
+
+    if (!p.has_extension() || p.extension() != ".json")
     {
-        LOG_WARN << "Config file extension is not .json: " << this->_configFilePath << std::endl;
+        LOG_WARN << "Config file extension is not .json: " << configPath << '\n';
         return false;
     }
 

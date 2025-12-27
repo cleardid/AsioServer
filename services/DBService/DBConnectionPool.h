@@ -5,6 +5,7 @@
 #include <queue>
 #include <mutex>
 #include <memory>
+#include <condition_variable>
 
 // 前置声明
 class DBConnection;

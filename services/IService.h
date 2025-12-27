@@ -32,7 +32,7 @@ public:
     // 子类公用方法 分发 cmd
     boost::asio::awaitable<void> Handle(std::shared_ptr<CSession> session, std::shared_ptr<MsgNode> msg);
 
-protected: 
+protected:
     // 命令回调字典 子类使用
     std::unordered_map<uint16_t, CmdFunCallBack> _cmdMap;
 };
