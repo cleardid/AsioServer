@@ -2,14 +2,17 @@
 #include "CSession.h"
 #include "../common/Const.h"
 #include "../message/MsgNode.h"
+#include "../server/CServer.h"
 
 #include "../../infra/log/Logger.h"
+#include "../../services/CommunicationService/ClientInfo.h"
 
 CSession::CSession(boost::asio::io_context &ioc, CServer *server)
     : _ioc(ioc),
       _server(server),
       _socket(ioc),
-      _bStop(false)
+      _bStop(false),
+      _clientInfo(nullptr)
 {
     // 随机生成 uuid
     auto uuid = boost::uuids::random_generator()();
@@ -33,12 +36,11 @@ CSession::~CSession()
 
 void CSession::Close()
 {
-    // this->_socket.close();
-    // this->_bStop = true;
-
+    // 以原子操作更改状态
     if (this->_bStop.exchange(true))
         return;
 
+    // 将传入的 lambda 任务提交到 io_context 的任务队列中，等待 io_context 对应的 IO 线程去执行
     boost::asio::post(_ioc, [self = shared_from_this()]()
                       {
         boost::system::error_code ec;
@@ -90,6 +92,27 @@ void CSession::Send(const MessageHeader &header, const nlohmann::json &body)
 {
     // 发送
     Send(header, body.dump(4));
+}
+
+void CSession::ClientClose()
+{
+    LOG_INFO << "CoroutineSession: Client Close a Connect." << std::endl;
+    Close();
+    this->_server->DelSessionByUuid(this->_uuid);
+}
+
+bool CSession::SendToOtherSession(const std::string &uuid, const MessageHeader &header, const std::string &body)
+{
+    // 获取其他会话
+    auto session = this->_server->GetSessionByUuid(uuid);
+
+    // 如果不存在，则返回 false
+    if (session == nullptr)
+        return false;
+    // 发送信息
+    session->Send(header, body);
+
+    return true;
 }
 
 void CSession::HandleWrite(const boost::system::error_code &error)

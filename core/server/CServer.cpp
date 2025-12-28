@@ -36,6 +36,19 @@ void CServer::DelSessionByUuid(const std::string &uuid)
     this->_sessionMap.erase(uuid);
 }
 
+std::shared_ptr<CSession> CServer::GetSessionByUuid(const std::string &uuid)
+{
+    // 加锁
+    std::lock_guard<std::mutex> lock(this->_mutex);
+    // 查找
+    auto it = this->_sessionMap.find(uuid);
+    if (it != this->_sessionMap.end())
+    {
+        return it->second;
+    }
+    return nullptr;
+}
+
 void CServer::StartCoroutineAccpet(bool isCreateFunc)
 {
     if (isCreateFunc)

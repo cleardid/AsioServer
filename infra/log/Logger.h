@@ -48,9 +48,9 @@ struct LogEvent
     LogEvent(LogLevel level, const char *file, int line, const std::string &msg)
         : level(level), file(file), line(line), msg(msg), time(std::chrono::system_clock::now())
     {
-        // 将std::thread::id转换为uint64_t（跨平台兼容）
-        std::hash<std::thread::id> hasher;
-        thread_id = hasher(std::this_thread::get_id());
+        // // 将std::thread::id转换为uint64_t（跨平台兼容）
+        // std::hash<std::thread::id> hasher;
+        // thread_id = hasher(std::this_thread::get_id());
     }
 };
 

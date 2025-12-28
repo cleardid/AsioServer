@@ -110,6 +110,10 @@ bool LogicSystem::AssistProcessMsg()
              << header.serviceId << ", CmdId = "
              << header.cmdId << std::endl;
 
+    // 获取socket
+    auto &socket = session->GetSocket();
+    LOG_INFO << "Get Connention By " << socket.remote_endpoint() << std::endl;
+
     // ==============================
     // 投递到 asio 协程执行
     // ==============================

@@ -26,6 +26,8 @@ public:
     void ClearSession();
     // 删除 uuid 对应的 Session
     void DelSessionByUuid(const std::string &);
+    // 获取 uuid 对应的 Session
+    std::shared_ptr<CSession> GetSessionByUuid(const std::string &);
 
 private:
     // 开始监听

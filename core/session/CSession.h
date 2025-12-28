@@ -15,6 +15,7 @@
 
 // 前置声明
 class CServer;
+class ClientInfo;
 
 class CSession : public std::enable_shared_from_this<CSession>
 {
@@ -38,6 +39,15 @@ public:
     const std::string &GetUuid() const { return this->_uuid; };
     // 获取 IO 上下文
     boost::asio::io_context &GetIoContext() { return this->_ioc; }
+
+    // 设置客户端信息
+    void SetClientInfo(std::shared_ptr<ClientInfo> clientInfo) { this->_clientInfo = std::move(clientInfo); }
+    // 获取客户端信息
+    std::shared_ptr<ClientInfo> &GetClientInfo() { return this->_clientInfo; }
+    // 客户端主动关闭会话
+    void ClientClose();
+    // 通过 server 访问其他会话
+    bool SendToOtherSession(const std::string &uuid, const MessageHeader &header, const std::string &body);
 
 protected:
     // 处理写事件
@@ -64,6 +74,8 @@ protected:
     std::queue<std::shared_ptr<MsgNode>> _sendQue;
     // 原子类型标志变量，确保线程安全，表示此会话关闭
     std::atomic<bool> _bStop;
+    // 客户端信息，默认不创建，仅在通信服务中创建
+    std::shared_ptr<ClientInfo> _clientInfo;
 };
 
 #endif // CSESSION_H
