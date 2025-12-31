@@ -26,7 +26,6 @@ void CoroutineSession::Start()
                         this->_recvNode->Clear();
                         // 开始读取头部信息
                         std::size_t len = co_await boost::asio::async_read(this->_socket, boost::asio::buffer(this->_recvNode->GetHeaderData(), MsgNode::GetHeaderSize()), boost::asio::use_awaitable);
-                        LOG_INFO << len << std::endl;
                         if (len == 0)
                         {
                             LOG_ERROR << "CoroutineSession: Client Close a Connect." << std::endl;

@@ -56,6 +56,13 @@ add_executable(${PROJECT_NAME}
     ./services/DBService/MySQLConnectionPool.cpp
     ./services/DBService/SQLiteConnection.cpp
     ./services/DBService/SQLiteConnectionPool.cpp
+
+    ./services/CommunicationService/ClientManager.cpp
+    ./services/CommunicationService/CommunicationService.cpp
+    ./services/CommunicationService/CommunicationServiceRegister.cpp
+
+    ./services/HeartService/HeartService.cpp
+    ./services/HeartService/HeartServiceRegister.cpp
 )
 
 # 添加包含目录
@@ -80,6 +87,9 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/services
     ${CMAKE_SOURCE_DIR}/services/HelloService
     ${CMAKE_SOURCE_DIR}/services/DBService
+    ${CMAKE_SOURCE_DIR}/services/CommunicationService
+    ${CMAKE_SOURCE_DIR}/services/HeartService
+
 )
 
 if(WIN32)

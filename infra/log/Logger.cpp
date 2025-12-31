@@ -7,8 +7,8 @@ std::string PatternLayout::Format(const LogEvent &event)
     std::ostringstream oss;
 
     // 1. 时间戳（yyyy-MM-dd HH:mm:ss.SSS）
-    auto time_t = std::chrono::system_clock::to_time_t(event.time);
-    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(event.time.time_since_epoch()) % 1000;
+    auto time_t = std::chrono::system_clock::to_time_t(event._time);
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(event._time.time_since_epoch()) % 1000;
     oss << std::put_time(std::localtime(&time_t), "[%Y-%m-%d %H:%M:%S.")
         << std::setfill('0') << std::setw(3) << ms.count() << "] ";
 
@@ -16,13 +16,13 @@ std::string PatternLayout::Format(const LogEvent &event)
     // oss << "[" << event.thread_id << "] ";
 
     // 3. 日志级别
-    oss << "[" << LogLevelToString(event.level) << "] ";
+    oss << "[" << LogLevelToString(event._level) << "] ";
 
     // 4. 文件+行号
-    oss << "[" << event.file << ":" << event.line << "] - ";
+    oss << "[" << event._file << ":" << event._line << "] - ";
 
     // 5. 日志消息
-    oss << event.msg;
+    oss << event._msg;
 
     return oss.str();
 }
@@ -146,11 +146,14 @@ void FileAppender::RollFile()
     OpenFile();
 }
 
-// 新增：设置异步模式（默认同步）
+// 新增：设置异步模式
 void Logger::SetAsyncMode(bool async, size_t queue_size)
 {
+    // 加锁
     std::lock_guard<std::mutex> lock(this->_mutex);
+    // 更新同步状态
     this->_isAsync = async;
+    // 根据同步状态调整日志处理方式
     if (this->_isAsync)
     {
         // 初始化异步队列和日志线程
@@ -210,7 +213,7 @@ void Logger::AsyncLogThread()
         DispatchLog(event);
     }
 
-    // 处理队列剩余日志
+    // 处理队列剩余日志 可能在输出的时候又添加了新的日志
     while (this->_logQue->Size() > 0)
     {
         if (this->_logQue->Pop(event))
@@ -223,7 +226,9 @@ void Logger::AsyncLogThread()
 // 分发日志到所有输出器（抽离为独立方法）
 void Logger::DispatchLog(const std::shared_ptr<LogEvent> &event)
 {
+    // 加锁
     std::lock_guard<std::mutex> lock(this->_mutex);
+    // 遍历所有输出器，逐个追加日志
     for (auto &appender : this->_appenders)
     {
         appender->Append(*event);

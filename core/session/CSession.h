@@ -43,7 +43,7 @@ public:
     // 设置客户端信息
     void SetClientInfo(std::shared_ptr<ClientInfo> clientInfo) { this->_clientInfo = std::move(clientInfo); }
     // 获取客户端信息
-    std::shared_ptr<ClientInfo> &GetClientInfo() { return this->_clientInfo; }
+    std::shared_ptr<ClientInfo> GetClientInfo() { return this->_clientInfo; }
     // 客户端主动关闭会话
     void ClientClose();
     // 通过 server 访问其他会话
@@ -68,7 +68,7 @@ protected:
     boost::asio::ip::tcp::socket _socket;
     // 互斥量 用于发送队列的多线程保护
     std::mutex _mutex;
-    // 头部信息
+    // 接收到的信息节点
     std::shared_ptr<MsgNode> _recvNode;
     // 发送队列
     std::queue<std::shared_ptr<MsgNode>> _sendQue;

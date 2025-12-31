@@ -19,7 +19,7 @@ uint16_t CommunicationService::GetServiceId() const
 
 void CommunicationService::RegisterCmd()
 {
-    this->_cmdMap[COMMUINICATION_CREATE] = std::bind(&CommunicationService::OnCreateCallBack, this, std::placeholders::_1, std::placeholders::_2);
+    this->_cmdMap[COMMUINICATION_REGISTER] = std::bind(&CommunicationService::OnCreateCallBack, this, std::placeholders::_1, std::placeholders::_2);
     this->_cmdMap[COMMUINICATION_CLOSE] = std::bind(&CommunicationService::OnCloseCallBack, this, std::placeholders::_1, std::placeholders::_2);
     this->_cmdMap[COMMUINICATION_SEND] = std::bind(&CommunicationService::OnSendCallBack, this, std::placeholders::_1, std::placeholders::_2);
     this->_cmdMap[COMMUINICATION_SHOW] = std::bind(&CommunicationService::OnShowCallBack, this, std::placeholders::_1, std::placeholders::_2);
@@ -180,7 +180,7 @@ boost::asio::awaitable<void> CommunicationService::OnSendCallBack(std::shared_pt
         // 获取接收端的 session 的 uuid
         auto clientSessionUuid = ClientManager::GetInstance().GetClient(clientName);
         // 未找到接收端
-        if (clientSessionUuid == "")
+        if (clientSessionUuid.empty())
         {
             // 声明错误信息
             std::string errorMsg = "client name not exists";

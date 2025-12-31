@@ -32,25 +32,20 @@ class LogStream;
 struct LogEvent
 {
     // 时间戳（毫秒级）
-    std::chrono::system_clock::time_point time;
-    // 线程ID
-    uint64_t thread_id;
+    std::chrono::system_clock::time_point _time;
     // 日志级别
-    LogLevel level;
+    LogLevel _level;
     // 文件名（__FILE__宏）
-    const char *file;
+    const char *_file;
     // 行号（__LINE__宏）
-    int line;
+    int _line;
     // 日志消息
-    std::string msg;
+    std::string _msg;
 
     // 构造函数：初始化基础信息（时间、线程ID）
     LogEvent(LogLevel level, const char *file, int line, const std::string &msg)
-        : level(level), file(file), line(line), msg(msg), time(std::chrono::system_clock::now())
+        : _level(level), _file(file), _line(line), _msg(msg), _time(std::chrono::system_clock::now())
     {
-        // // 将std::thread::id转换为uint64_t（跨平台兼容）
-        // std::hash<std::thread::id> hasher;
-        // thread_id = hasher(std::this_thread::get_id());
     }
 };
 
@@ -137,14 +132,13 @@ public:
     Logger(Logger &&) = delete;
     Logger &operator=(Logger &&) = delete;
 
-    // 设置异步模式（默认同步）
+    // 设置异步模式
     void SetAsyncMode(bool async = true, size_t queue_size = 10000);
     // 添加输出器
     void AddAppender(std::unique_ptr<LogAppender> appender);
     // 设置全局日志级别（低于该级别的日志不输出）
     void SetLevel(LogLevel level);
-
-    // 私有成员方法 用于处理日志输出
+    // 对外接口：处理日志输出
     void log(LogLevel level, const char *file, int line, const std::string &msg);
 
     // 析构函数：优雅停止异步线程，处理剩余日志
