@@ -67,9 +67,6 @@ void CSession::Send(const MessageHeader &header, const char *body, const uint32_
         std::memcpy(node->GetBody(), body, len);
     }
 
-    // 输出日志
-    node->Print();
-
     // 转网络字节序（只在发送前做一次）
     node->GetHeader().ToNetwork();
 
@@ -77,6 +74,8 @@ void CSession::Send(const MessageHeader &header, const char *body, const uint32_
     node->BuildSendBuffer();
 
     auto self = shared_from_this();
+
+    LOG_INFO << "Send Data." << std::endl;
 
     // 投递到 io_context
     boost::asio::post(_ioc, [this, self, node]()

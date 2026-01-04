@@ -49,9 +49,10 @@ void CoroutineSession::Start()
                             this->_server->DelSessionByUuid(this->_uuid);
                             co_return;
                         }
+
+                        LOG_INFO << "CoroutineSession: Recived Node to LogicSystem... " << std::endl;
                         // 输出信息
                         this->_recvNode->Print();
-                        LOG_INFO << "CoroutineSession: Recived Node to LogicSystem... " << std::endl;
                         auto msg = std::move(_recvNode);
                         this->_recvNode = std::make_shared<MsgNode>();
 

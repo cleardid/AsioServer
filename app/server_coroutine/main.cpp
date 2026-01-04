@@ -149,17 +149,18 @@ int main()
         const uint16_t port = GetPortFromConfig();
         // 获取线程池
         auto &pool = AsioIOServicePool::GetInstance();
-        // 获取链接的上下文
+        // 获取连接的上下文
         boost::asio::io_context ioc;
         // 添加信号量，用于退出
         boost::asio::signal_set signals(ioc, SIGINT, SIGTERM);
         // 异步等待
         signals.async_wait([&](auto, auto)
                            {
-            ioc.stop();
-            pool.Stop(); });
-
+                                ioc.stop();
+                                pool.Stop(); });
+        // 声明服务
         CServer server(ioc, port);
+        // 启动服务
         ioc.run();
     }
     catch (const std::exception &e)

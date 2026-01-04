@@ -16,7 +16,7 @@ LogicSystem::LogicSystem()
     : _isStoped(false)
 {
     // 启动工作线程
-    this->_wordThread = std::thread(&LogicSystem::ProcessMsg, this);
+    this->_workThread = std::thread(&LogicSystem::ProcessMsg, this);
 }
 
 // 析构函数
@@ -24,10 +24,10 @@ LogicSystem::~LogicSystem()
 {
     // 更改运行状态
     this->_isStoped = true;
-    //
+    // 唤醒工作线程
     this->_workCond.notify_one();
     // 等待线程结束
-    this->_wordThread.join();
+    this->_workThread.join();
 }
 
 // 单例

@@ -20,6 +20,7 @@ class ClientInfo;
 class CSession : public std::enable_shared_from_this<CSession>
 {
 public:
+    // 构造函数
     CSession(boost::asio::io_context &ioc, CServer *server);
     // 虚析构函数
     virtual ~CSession();
@@ -28,9 +29,9 @@ public:
     // 获取 socket
     boost::asio::ip::tcp::socket &GetSocket() { return this->_socket; }
 
-    // 纯虚方法 子类实现
+    // 纯虚方法 子类实现各自逻辑
     virtual void Start() = 0;
-
+    // 关闭会话
     void Close();
     // 对外接口
     void Send(const MessageHeader &header, const std::string &);
@@ -44,6 +45,7 @@ public:
     void SetClientInfo(std::shared_ptr<ClientInfo> clientInfo) { this->_clientInfo = std::move(clientInfo); }
     // 获取客户端信息
     std::shared_ptr<ClientInfo> GetClientInfo() { return this->_clientInfo; }
+
     // 客户端主动关闭会话
     void ClientClose();
     // 通过 server 访问其他会话

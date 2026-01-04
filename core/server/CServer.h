@@ -18,7 +18,9 @@ class CSession;
 class CServer
 {
 public:
+    // 构造函数
     CServer(boost::asio::io_context &ioc, const uint16_t port, ASIO_TYPE type = ASIO_TYPE::COROUTINE);
+    // 析构函数
     ~CServer();
 
     // 对外接口

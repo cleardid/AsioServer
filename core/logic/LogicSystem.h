@@ -16,8 +16,6 @@
 class LogicNode;
 class CSession;
 
-typedef std::function<void(std::shared_ptr<CSession>, const int16_t &msgId, std::string &&msg)> FunCallBack;
-
 class LogicSystem
 {
 public:
@@ -43,7 +41,7 @@ private:
     // 逻辑消息队列
     std::queue<std::shared_ptr<LogicNode>> _msgQue;
     // 工作线程
-    std::thread _wordThread;
+    std::thread _workThread;
     // 互斥量
     std::mutex _queMutex;
     // 条件变量，用于在队列为空时，将处理线程短暂挂起，直至有新的消息进来，降低 CPU 的轮转

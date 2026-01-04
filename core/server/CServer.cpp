@@ -23,6 +23,7 @@ CServer::CServer(boost::asio::io_context &ioc, const uint16_t port, ASIO_TYPE ty
 CServer::~CServer()
 {
     LOG_INFO << "Server is destructed." << std::endl;
+    ClearSession();
 }
 
 void CServer::ClearSession()

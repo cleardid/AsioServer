@@ -17,7 +17,7 @@ public:
     // 默认构造函数
     MsgNode() = default;
 
-    // 显示声明构造函数
+    // 显式声明构造函数
     explicit MsgNode(uint32_t bodyLen)
     {
         Allocate(bodyLen);
