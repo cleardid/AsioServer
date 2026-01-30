@@ -22,7 +22,11 @@ void HeartService::RegisterCmd()
 
 boost::asio::awaitable<void> HeartService::OnRecvHeartCallBack(std::shared_ptr<CSession> session, std::shared_ptr<MsgNode> msg)
 {
-    LOG_INFO << "CommunicationService OnRecvHeartCallBack" << "\n";
+    // 获取 socket
+    auto &socket = session->GetSocket();
+    // 输出心跳日志
+    // LOG_INFO << "HeartService OnRecvHeartCallBack" << "\n";
+    LOG_INFO << "Get " << socket.remote_endpoint() << " HeartService" << "\n";
 
     // 获取请求头
     auto &hdr = msg->GetHeader();

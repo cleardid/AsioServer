@@ -17,11 +17,11 @@ public:
     // 重写父类方法
     void Start() override;
 
+    ~CoroutineSession() override;
+
 private:
     // 启动心跳超时检查
     void StartHeartbeatCheck();
-
-    ~CoroutineSession();
 
 private:
     boost::asio::steady_timer _deadline;                      // 超时定时器

@@ -26,11 +26,18 @@ CSession::~CSession()
     try
     {
         LOG_INFO << " CSession is destructed." << std::endl;
-        Close();
+
+        // 直接关闭 Socket，不要调用 Close()
+        // 因为 Close() 中含有 shared_from_this()，在析构中调用必死
+        if (_socket.is_open())
+        {
+            boost::system::error_code ec;
+            _socket.close(ec);
+        }
     }
     catch (const std::exception &e)
     {
-        LOG_ERROR << e.what() << '\n';
+        LOG_ERROR << "Destructor error: " << e.what() << '\n';
     }
 }
 
@@ -75,7 +82,7 @@ void CSession::Send(const MessageHeader &header, const char *body, const uint32_
 
     auto self = shared_from_this();
 
-    LOG_INFO << "Send Data." << std::endl;
+    // LOG_INFO << "Send Data." << std::endl;
 
     // 投递到 io_context
     boost::asio::post(_ioc, [this, self, node]()
