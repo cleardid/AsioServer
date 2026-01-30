@@ -8,7 +8,11 @@ if(WIN32)
     # MSYS2 + MinGW64
     cmake_policy(SET CMP0167 NEW)
 
-    find_package(Boost CONFIG REQUIRED COMPONENTS system thread)
+    # 1. 增加 charconv, url, context 组件 (Boost.MySQL 需要)
+    find_package(Boost CONFIG REQUIRED COMPONENTS system thread charconv url context)
+    # 2. 查找 OpenSSL (MySQL 必须)
+    find_package(OpenSSL REQUIRED)
+
     find_package(SQLite3 REQUIRED)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(MARIADB REQUIRED libmariadb)
@@ -17,6 +21,11 @@ else()
     set(BOOST_ROOT "/opt/homebrew/opt/boost@1.85")
     set(BOOST_INCLUDE_DIR "${BOOST_ROOT}/include")
     set(BOOST_LIB_DIR "${BOOST_ROOT}/lib")
+
+    # 3. 新增: OpenSSL 路径 (MacOS Homebrew)
+    set(OPENSSL_ROOT "/opt/homebrew/opt/openssl@3") # 或者是 openssl@1.1，视安装情况而定
+    set(OPENSSL_INCLUDE_DIR "${OPENSSL_ROOT}/include")
+    set(OPENSSL_LIB_DIR "${OPENSSL_ROOT}/lib")
 
     set(MYSQL_ROOT "/opt/homebrew/opt/mysql@8.0")
     set(MYSQL_INCLUDE_DIR "${MYSQL_ROOT}/include")
@@ -95,33 +104,29 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 if(WIN32)
     target_include_directories(${PROJECT_NAME} PRIVATE
         ${MARIADB_INCLUDE_DIRS}
+        ${OpenSSL_INCLUDE_DIRS} # Windows 下自动查找的路径
     )
 else()
     target_include_directories(${PROJECT_NAME} PRIVATE
         ${BOOST_INCLUDE_DIR}
         ${MYSQL_INCLUDE_DIR}
         ${SQLITE3_INCLUDE_DIR}
+        ${OPENSSL_INCLUDE_DIR} # MacOS 下需要手动指定
     )
 endif()
 
 if(WIN32)
-
-    # target_link_libraries(${PROJECT_NAME} PRIVATE
-    #     boost_system
-    #     boost_thread
-    #     mysqlclient       # 或 libmariadb
-    #     sqlite3
-    #     ws2_32
-    #     mswsock           # 必须加
-    #     bcrypt            # 推荐
-    # )
-
     target_link_libraries(${PROJECT_NAME} PRIVATE
         mariadb
         sqlite3
         ws2_32
         mswsock
         bcrypt
+        OpenSSL::SSL    # 新增
+        OpenSSL::Crypto # 新增
+        Boost::url      # 新增
+        Boost::charconv # 新增
+        Boost::context  # 新增
     )
 
 else()
@@ -130,10 +135,17 @@ else()
         ${BOOST_LIB_DIR}
         ${MYSQL_LIB_DIR}
         ${SQLITE3_LIB_DIR}
+        ${OPENSSL_LIB_DIR} # OpenSSL 路径
     )
 
     target_link_libraries(${PROJECT_NAME} PRIVATE
         boost_system
+        boost_thread
+        boost_url       # 新增: libboost_url.dylib
+        boost_charconv  # 新增
+        boost_context   # 新增
+        ssl             # 新增: libssl
+        crypto          # 新增: libcrypto
         mysqlclient
         sqlite3
     )

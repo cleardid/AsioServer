@@ -3,6 +3,7 @@
 #include "MySQLConnection.h"
 
 #include "../../infra/log/Logger.h"
+#include "../../core/session/AsioIOServicePool.h"
 
 MySQLConnectionPool::MySQLConnectionPool(const std::size_t maxConn, const std::string &host, const uint16_t &port, const std::string &user, const std::string &pwd, const std::string &db)
     : DBConnectionPool(maxConn),
@@ -26,8 +27,10 @@ void MySQLConnectionPool::Initialize()
         // 预创建一半的连接
         for (std::size_t i = 0; i < this->_max / 2; ++i)
         {
+            // 从上下文池中获取连接
+            auto &ioc = AsioIOServicePool::GetInstance().GetIOServive();
             // 创建连接
-            auto conn = std::make_shared<MySQLConnection>(this->_host, this->_port, this->_user, this->_pwd, this->_db);
+            auto conn = std::make_shared<MySQLConnection>(ioc, this->_host, this->_port, this->_user, this->_pwd, this->_db);
             if (conn->IsValid())
             {
                 // 加入空闲连接队列
@@ -54,9 +57,10 @@ void MySQLConnectionPool::Initialize()
 
 std::shared_ptr<DBConnection> MySQLConnectionPool::CreateConnection()
 {
-    auto conn = std::make_shared<MySQLConnection>(
-        _host, _port, _user, _pwd, _db);
+    // 从上下文池中获取连接
+    auto &ioc = AsioIOServicePool::GetInstance().GetIOServive();
 
+    auto conn = std::make_shared<MySQLConnection>(ioc, _host, _port, _user, _pwd, _db);
     // 安全性检查
     if (!conn->IsValid())
         return nullptr;

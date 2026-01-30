@@ -38,14 +38,14 @@ bool SqliteConnection::IsValid() const
     return this->_isConnected;
 }
 
-bool SqliteConnection::Execute(const std::string &sql, DBResult &out)
+boost::asio::awaitable<bool> SqliteConnection::Execute(const std::string &sql, DBResult &out)
 {
     sqlite3_stmt *stmt = nullptr;
 
     if (sqlite3_prepare_v2(_db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK)
     {
         out.errorMsg = sqlite3_errmsg(_db);
-        return false;
+        co_return false;
     }
 
     int colCount = sqlite3_column_count(stmt);
@@ -80,7 +80,7 @@ bool SqliteConnection::Execute(const std::string &sql, DBResult &out)
         {
             out.errorMsg = sqlite3_errmsg(_db);
             sqlite3_finalize(stmt);
-            return false;
+            co_return false;
         }
     }
 
@@ -92,5 +92,5 @@ bool SqliteConnection::Execute(const std::string &sql, DBResult &out)
     }
 
     sqlite3_finalize(stmt);
-    return true;
+    co_return true;
 }

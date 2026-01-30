@@ -15,8 +15,8 @@ public:
 
     bool IsValid() const override;
 
-    bool Execute(const std::string &sql,
-                 DBResult &out) override;
+    boost::asio::awaitable<bool> Execute(const std::string &sql,
+                                         DBResult &out) override;
 
 private:
     sqlite3 *_db;

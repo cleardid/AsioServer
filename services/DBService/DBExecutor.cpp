@@ -69,6 +69,8 @@ bool DBExecutor::InitializeFromConfig(const std::string &configPath)
         }
 
         std::lock_guard<std::mutex> lock(_mutex);
+
+        LOG_INFO << "Create connection pool for " << key.type << " " << key.ident << std::endl;
         _connPools.emplace(key, pool);
     }
 
@@ -85,8 +87,10 @@ boost::asio::awaitable<DBResult> DBExecutor::ExecuteRequest(const DBRequest &req
     {
         // 加锁，防止多线程同时访问
         std::lock_guard<std::mutex> lock(this->_mutex);
+
         // 根据请求类型和标识查找连接池
         auto it = _connPools.find(request.key);
+        // LOG_INFO << request.key.type << " " << request.key.ident << std::endl;
         if (it != _connPools.end())
             pool = it->second;
     }
@@ -132,7 +136,8 @@ boost::asio::awaitable<DBResult> DBExecutor::ExecuteRequest(const DBRequest &req
     LOG_DEBUG << "ExecuteRequest: " << request.sql << std::endl;
 
     // 执行请求
-    result.success = conn->Execute(request.sql, result);
+    auto res = co_await conn->Execute(request.sql, result);
+    result.success = static_cast<bool>(res);
     // 释放连接
     pool->Release(conn);
     // 返回结果
