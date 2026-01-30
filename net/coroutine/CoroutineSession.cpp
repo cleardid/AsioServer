@@ -8,13 +8,55 @@
 #include "../../infra/log/Logger.h"
 #include "../../infra/util/StringFormat.h"
 
+#include "../../core/common/Const.h" // 获取心跳服务ID
+
 CoroutineSession::CoroutineSession(boost::asio::io_context &ioc, CServer *server)
-    : CSession(ioc, server)
+    : CSession(ioc, server),
+      _deadline(ioc) // 初始化定时器
 {
+    // 初始化最后活动时间
+    _last_message_time = std::chrono::steady_clock::now();
+}
+
+CoroutineSession::~CoroutineSession()
+{
+    // 取消定时器
+    _deadline.cancel();
+}
+
+// 新增：心跳检测协程
+void CoroutineSession::StartHeartbeatCheck()
+{
+    // 设置超时时间，例如 60 秒无数据则断开
+    auto self = shared_from_this();
+    boost::asio::co_spawn(_ioc, [self, this]() -> boost::asio::awaitable<void>
+                          {
+        while (!_bStop) {
+            // 设置定时器等待 5 秒检查一次
+            _deadline.expires_after(std::chrono::seconds(5));
+            boost::system::error_code ec;
+            co_await _deadline.async_wait(redirect_error(boost::asio::use_awaitable, ec));
+
+            if (_bStop) co_return;
+
+            // 检查距离上次收到消息是否超过 60 秒
+            auto now = std::chrono::steady_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::seconds>(now - _last_message_time).count();
+
+            if (duration > 60) {
+                LOG_WARN << "Client heartbeat timeout! Force Close. UUID: " << GetUuid() << std::endl;
+                Close();
+                _server->DelSessionByUuid(_uuid);
+                co_return;
+            }
+        } }, boost::asio::detached);
 }
 
 void CoroutineSession::Start()
 {
+    // 1. 启动看门狗
+    StartHeartbeatCheck();
+
     // 开启协程
     boost::asio::co_spawn(this->_ioc, [this]() -> boost::asio::awaitable<void>
                           {

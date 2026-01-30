@@ -58,7 +58,7 @@ struct DBRequest
 {
     DBKey key;        // 连接信息
     std::string sql;  // SQL语句
-    std::string cmd;  // 命令类型
+    std::string cmd;  // 命令类型 （execute / close）
     uint32_t timeout; // 超时时间（毫秒）
 
     // 默认构造函数
