@@ -16,21 +16,25 @@ if(WIN32)
     find_package(SQLite3 REQUIRED)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(MARIADB REQUIRED libmariadb)
-else()
-    # MacOS 配置
+elseif(APPLE)
+    cmake_policy(SET CMP0144 NEW)
+    cmake_policy(SET CMP0167 NEW)
+    # 1. 查找 Boost (不再手动 set LIB_DIR)
+    # 如果你安装了特定版本(boost@1.85)，可以保留 BOOST_ROOT 作为提示，
+    # 但核心是靠 find_package 自动找库文件
     set(BOOST_ROOT "/opt/homebrew/opt/boost@1.85")
-    set(BOOST_INCLUDE_DIR "${BOOST_ROOT}/include")
-    set(BOOST_LIB_DIR "${BOOST_ROOT}/lib")
+    find_package(Boost REQUIRED COMPONENTS system thread charconv url context)
 
-    # 3. 新增: OpenSSL 路径 (MacOS Homebrew)
-    set(OPENSSL_ROOT "/opt/homebrew/opt/openssl@3") # 或者是 openssl@1.1，视安装情况而定
-    set(OPENSSL_INCLUDE_DIR "${OPENSSL_ROOT}/include")
-    set(OPENSSL_LIB_DIR "${OPENSSL_ROOT}/lib")
+    # 2. 查找 OpenSSL
+    set(OPENSSL_ROOT_DIR "/opt/homebrew/opt/openssl@3") 
+    find_package(OpenSSL REQUIRED)
 
+    # 3. 查找 MySQL (手动路径通常还需要，除非用 pkg-config)
     set(MYSQL_ROOT "/opt/homebrew/opt/mysql@8.0")
     set(MYSQL_INCLUDE_DIR "${MYSQL_ROOT}/include")
     set(MYSQL_LIB_DIR "${MYSQL_ROOT}/lib")
 
+    # 4. 查找 SQLite3
     set(SQLITE3_ROOT "/opt/homebrew/opt/sqlite")
     set(SQLITE3_INCLUDE_DIR "${SQLITE3_ROOT}/include")
     set(SQLITE3_LIB_DIR "${SQLITE3_ROOT}/lib")
@@ -76,9 +80,10 @@ add_executable(${PROJECT_NAME}
 
 # 添加包含目录
 target_include_directories(${PROJECT_NAME} PRIVATE
-    ${BOOST_INCLUDE_DIR}
+    ${BOOST_INCLUDE_DIRS}  # 使用 find_package 自动生成的变量
     ${MYSQL_INCLUDE_DIR}
     ${SQLITE3_INCLUDE_DIR}
+    ${OPENSSL_INCLUDE_DIR} # 使用 find_package 自动生成的变量
 
     ${CMAKE_SOURCE_DIR}
 
@@ -129,23 +134,28 @@ if(WIN32)
         Boost::context  # 新增
     )
 
-else()
+elseif(APPLE)
 
+    # MacOS 手动指定库目录 (仅针对 find_package 找不到的库，如 MySQL)
     target_link_directories(${PROJECT_NAME} PRIVATE
-        ${BOOST_LIB_DIR}
         ${MYSQL_LIB_DIR}
         ${SQLITE3_LIB_DIR}
-        ${OPENSSL_LIB_DIR} # OpenSSL 路径
     )
 
+    # MacOS 链接
     target_link_libraries(${PROJECT_NAME} PRIVATE
-        boost_system
-        boost_thread
-        boost_url       # 新增: libboost_url.dylib
-        boost_charconv  # 新增
-        boost_context   # 新增
-        ssl             # 新增: libssl
-        crypto          # 新增: libcrypto
+        # ✅ 使用 Boost::xxx 目标 (自动处理 boost_thread-mt vs boost_thread)
+        Boost::system
+        Boost::thread
+        Boost::url      
+        Boost::charconv 
+        Boost::context
+        
+        # ✅ 使用 OpenSSL::xxx 目标
+        OpenSSL::SSL
+        OpenSSL::Crypto
+        
+        # 传统库链接
         mysqlclient
         sqlite3
     )
