@@ -170,8 +170,14 @@ boost::asio::awaitable<void> CommunicationService::OnSendCallBack(std::shared_pt
             std::string(msg->GetBody(), msg->GetBodyLen()));
 
         auto &target = reqJson.at("target");
-        // 获取发送方的名称
-        auto name = target.at("name").get<std::string>();
+        // // 获取发送方的名称
+        // auto name = target.at("name").get<std::string>();
+        // 避免发送方伪造名称
+        std::string name = "Unknown";
+        if (auto info = session->GetClientInfo())
+        {
+            name = info->GetName();
+        }
         // 获取客户端指定的客户端
         auto clientName = target.at("client").get<std::string>();
         // 获取消息内容
@@ -198,8 +204,12 @@ boost::asio::awaitable<void> CommunicationService::OnSendCallBack(std::shared_pt
             {"from", name},
             {"message", message}};
 
+        MessageHeader forwardHdr = hdr;
+        forwardHdr.cmdId = COMMUINICATION_RECV; // ✅ 修改副本的 cmdId
+        forwardHdr.seq = 0;                     // 推送消息通常不需要复用发送者的 seq，置 0 即可
+
         // 发送信息
-        auto success = session->SendToOtherSession(clientSessionUuid, hdr, message);
+        auto success = session->SendToOtherSession(clientSessionUuid, forwardHdr, mJson.dump());
 
         if (success)
         {

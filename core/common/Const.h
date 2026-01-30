@@ -50,7 +50,8 @@ enum COMMUNICATION_CMD
     COMMUINICATION_REGISTER = 1, // 创建连接
     COMMUINICATION_CLOSE = 2,    // 关闭连接
     COMMUINICATION_SEND = 3,     // 发送数据
-    COMMUINICATION_SHOW = 4,     // 显示连接信息
+    COMMUINICATION_RECV = 4,     // 接收数据
+    COMMUINICATION_SHOW = 5,     // 显示连接信息
 };
 
 #pragma region 日志相关枚举及方法

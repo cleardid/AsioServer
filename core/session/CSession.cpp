@@ -6,6 +6,7 @@
 
 #include "../../infra/log/Logger.h"
 #include "../../services/CommunicationService/ClientInfo.h"
+#include "../../services/CommunicationService/ClientManager.h"
 
 CSession::CSession(boost::asio::io_context &ioc, CServer *server)
     : _ioc(ioc),
@@ -33,6 +34,15 @@ CSession::~CSession()
         {
             boost::system::error_code ec;
             _socket.close(ec);
+        }
+
+        // 自动清理在线列表
+        if (_clientInfo) // 假设你有这个成员存储 ClientInfo
+        {
+            LOG_INFO << "Auto removing client: " << _clientInfo->GetName() << std::endl;
+            ClientManager::GetInstance().RemoveClient(_clientInfo->GetName());
+            // 清空指针
+            _clientInfo.reset();
         }
     }
     catch (const std::exception &e)
