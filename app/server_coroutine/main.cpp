@@ -16,7 +16,7 @@
 #include "../../services/DBService/DBExecutor.h"
 
 // 初始化日志系统
-void InitLog()
+void InitLog(const std::string &configPath)
 {
     auto &logger = Logger::GetInstance();
 
@@ -24,7 +24,7 @@ void InitLog()
     logger.AddAppender(std::make_unique<ConsoleAppender>());
     // 读取日志输出目录
     // 创建配置文件读取器
-    auto configReader = std::make_shared<ConfigReader>("../config/server.json");
+    auto configReader = std::make_shared<ConfigReader>(configPath);
     auto logFile = configReader->GetString("log_path").value_or("./server.log");
     logger.AddAppender(std::make_unique<FileAppender>(logFile));
     // 释放配置文件读取器
@@ -38,13 +38,13 @@ void InitLog()
 }
 
 // 从配置文件中读取端口配置
-uint16_t GetPortFromConfig()
+uint16_t GetPortFromConfig(const std::string &configPath)
 {
     // 定义默认端口
     uint16_t port = 11111;
 
     // 创建配置文件读取器
-    auto configReader = std::make_shared<ConfigReader>("../config/server.json");
+    auto configReader = std::make_shared<ConfigReader>(configPath);
     // 读取端口号
     auto setPort = configReader->GetUInt("port").value_or(11111);
     // 释放配置文件读取器
@@ -135,9 +135,9 @@ int main()
     try
     {
         // 初始化日志系统
-        InitLog();
+        InitLog("../config/server.json");
         // 读取数据库配置
-        DBExecutor::GetInstance().InitializeFromConfig();
+        DBExecutor::GetInstance().InitializeFromConfig("../config/database.json");
         // 注册服务
         RegisterServices();
 
@@ -146,7 +146,7 @@ int main()
         // LOG_INFO << "MySQL test completed.\n";
 
         // 端口
-        const uint16_t port = GetPortFromConfig();
+        const uint16_t port = GetPortFromConfig("../config/server.json");
         // 获取线程池
         auto &pool = AsioIOServicePool::GetInstance();
         // 获取连接的上下文

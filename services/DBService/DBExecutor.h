@@ -30,8 +30,7 @@ public:
     static DBExecutor &GetInstance();
 
     // 从配置文件中读取数据库信息，创建 Mysql / SQLite 连接池
-    // 文件路径应以 ConfigReader.h 所在的路径为准
-    bool InitializeFromConfig(const std::string &configPath = "../config/database.json");
+    bool InitializeFromConfig(const std::string &configPath);
     // 协程 执行数据库请求 返回结果
     boost::asio::awaitable<DBResult> ExecuteRequest(const DBRequest &request);
 
