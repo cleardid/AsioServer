@@ -33,6 +33,9 @@ public:
     // 关闭连接池，释放所有连接
     void CloseAll();
 
+    // 对外接口：获取连接池中的连接数
+    std::size_t GetConnectionCount() const { return this->_created; };
+
     // 虚析构函数，确保子类析构函数被调用
     virtual ~DBConnectionPool() = default;
     // 纯虚方法 初始化连接池

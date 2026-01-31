@@ -80,6 +80,7 @@ void CServer::HandleAccpet(std::shared_ptr<CSession> newSession, const boost::sy
     {
         // 启动会话
         newSession->Start();
+        LOG_INFO << "Get Connention From " << newSession->GetSocket().remote_endpoint() << std::endl;
         // 加锁
         std::lock_guard<std::mutex> lock(this->_mutex);
         // 加入字典

@@ -55,6 +55,14 @@ bool DBExecutor::InitializeFromConfig(const std::string &configPath)
 
             pool = std::make_shared<MySQLConnectionPool>(
                 poolSize, host, port, user, pwd, database);
+
+            // 获取连接数
+            auto connCount = pool->GetConnectionCount();
+            if (connCount <= 0)
+            {
+                LOG_ERROR << "Failed to create connection pool for " << key.type << " " << key.ident << std::endl;
+                continue;
+            }
         }
         else if (type == "sqlite")
         {
