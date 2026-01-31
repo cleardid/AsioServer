@@ -29,12 +29,25 @@ void MsgNode::Clear()
 
 void MsgNode::BuildSendBuffer()
 {
-    this->_sendBuf.resize(sizeof(MessageHeader) + this->_body.size());
-    std::memcpy(this->_sendBuf.data(), &this->_header, sizeof(MessageHeader));
+    uint32_t realLen = 0;
     if (!this->_body.empty())
     {
+        // 在 Allocate 时，末尾添加了 \0，所以实际长度要减1
+        // 实际 header 中，存储的长度不包括 \0
+        realLen = static_cast<uint32_t>(this->_body.size() - 1);
+    }
+
+    // 1. 设置缓冲区大小 (Header + 真实Body)
+    this->_sendBuf.resize(sizeof(MessageHeader) + realLen);
+
+    // 2. 拷贝 Header (已经是网络序，直接拷贝)
+    std::memcpy(this->_sendBuf.data(), &this->_header, sizeof(MessageHeader));
+
+    // 3. 拷贝 Body (只拷贝真实数据，丢弃末尾的 \0)
+    if (realLen > 0)
+    {
         std::memcpy(this->_sendBuf.data() + sizeof(MessageHeader),
-                    this->_body.data(), this->_body.size());
+                    this->_body.data(), realLen);
     }
 }
 

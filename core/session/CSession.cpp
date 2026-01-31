@@ -36,18 +36,29 @@ CSession::~CSession()
             _socket.close(ec);
         }
 
-        // 自动清理在线列表
-        if (_clientInfo) // 假设你有这个成员存储 ClientInfo
+        // 2. 清理 ClientManager (加固)
+        // 先把 shared_ptr 复制一份到本地，防止多线程竞争下 _clientInfo 突然变空
+        auto info = _clientInfo;
+        if (info)
         {
-            LOG_INFO << "Auto removing client: " << _clientInfo->GetName() << std::endl;
-            ClientManager::GetInstance().RemoveClient(_clientInfo->GetName());
-            // 清空指针
-            _clientInfo.reset();
+            // 再次检查名字是否为空
+            std::string name = info->GetName();
+            if (!name.empty())
+            {
+                LOG_INFO << "Auto removing client: " << name << std::endl;
+                // 确保 ClientManager 还是活着的 (虽然它是静态单例，理论上一直活着)
+                ClientManager::GetInstance().RemoveClient(name);
+            }
         }
     }
     catch (const std::exception &e)
     {
         LOG_ERROR << "Destructor error: " << e.what() << '\n';
+        std::cerr << "Destructor Exception: " << e.what() << std::endl;
+    }
+    catch (...)
+    {
+        std::cerr << "Destructor Unknown Exception" << std::endl;
     }
 }
 
@@ -125,6 +136,9 @@ bool CSession::SendToOtherSession(const std::string &uuid, const MessageHeader &
     // 如果不存在，则返回 false
     if (session == nullptr)
         return false;
+
+    LOG_INFO << "SendToOtherSession: " << uuid << std::endl;
+    LOG_INFO << "SendToOtherSession: " << session->GetSocket().remote_endpoint() << std::endl;
     // 发送信息
     session->Send(header, body);
 
@@ -137,28 +151,45 @@ void CSession::HandleWrite(const boost::system::error_code &error)
     {
         if (!error)
         {
-            // 加锁
+            // 加锁 (保护队列操作)
             std::unique_lock<std::mutex> lock(this->_mutex);
-            // 上一个头部已经发送完毕，则出队即可
-            this->_sendQue.pop();
+
+            // 1. 移除刚刚发送完成的节点
             if (!this->_sendQue.empty())
             {
-                // 获取当前节点
+                this->_sendQue.pop();
+            }
+
+            // 2. 检查是否还有待发送的消息
+            if (!this->_sendQue.empty())
+            {
+                // 获取下一个节点
                 auto msgNode = this->_sendQue.front();
-                // 解锁
+
+                // 解锁 (async_write 不需要持有锁，且 msgNode 是 shared_ptr 安全的)
                 lock.unlock();
-                // 发送信息
-                boost::asio::async_write(this->_socket, boost::asio::buffer(msgNode->GetBody(), msgNode->GetBodyLen()), std::bind(&CSession::HandleWrite, shared_from_this(), std::placeholders::_1));
+
+                // 3. 必须发送 Header + Body (GetSendData)，不能只发 Body
+                boost::asio::async_write(
+                    this->_socket,
+                    boost::asio::buffer(msgNode->GetSendData(), msgNode->GetSendSize()),
+                    std::bind(&CSession::HandleWrite, shared_from_this(), std::placeholders::_1));
             }
         }
         else
         {
-            LOG_ERROR << "HandleWrite Get Error : " << error.what() << std::endl;
+            // 忽略连接被中止的错误(1236/995等)，这通常意味着连接已关闭
+            if (error.value() != boost::asio::error::operation_aborted)
+            {
+                LOG_ERROR << "HandleWrite Get Error : " << error.message() << " [" << error.value() << "]" << std::endl;
+            }
+            // 出错时清理会话
+            Close();
         }
     }
     catch (const std::exception &e)
     {
-        LOG_ERROR << e.what() << '\n';
+        LOG_ERROR << "HandleWrite Exception: " << e.what() << '\n';
     }
 }
 
@@ -167,32 +198,47 @@ void CSession::DoSend(std::shared_ptr<MsgNode> node)
     if (this->_bStop)
         return;
 
+    // 加锁 (保护队列操作)
+    std::unique_lock<std::mutex> lock(this->_mutex);
+
+    // 检查队列长度限制
     if (this->_sendQue.size() >= MAX_SENDQUE_LEN)
     {
         LOG_WARN << "Session " << this->_uuid << " send queue full\n";
         return;
     }
 
+    // ✅ 修复：在 push 之前判断是否需要触发 Write
     bool writing = !this->_sendQue.empty();
     this->_sendQue.push(node);
 
+    // 如果之前队列为空，说明当前没有 Write 任务在运行，需要主动触发
     if (!writing)
     {
+        // 释放锁后再调用 DoWrite，防止 DoWrite 内部死锁 (虽然目前 DoWrite 逻辑简单，但这是好习惯)
+        lock.unlock();
         DoWrite();
     }
 }
 
 void CSession::DoWrite()
 {
+    // 加锁 (保护队列操作)
+    std::unique_lock<std::mutex> lock(this->_mutex);
+
     if (this->_sendQue.empty())
         return;
 
     auto self = shared_from_this();
-    auto &node = _sendQue.front();
+    auto node = _sendQue.front(); // 获取 shared_ptr 副本，确保在 async_write 期间存活
 
+    // 解锁
+    lock.unlock();
+
+    // 发送
     boost::asio::async_write(
         this->_socket,
-        boost::asio::buffer(node->GetSendData(), node->GetSendSize()),
+        boost::asio::buffer(node->GetSendData(), node->GetSendSize()), // 需发送：Header + Body
         [this, self](const boost::system::error_code &ec, std::size_t)
         {
             HandleWrite(ec);
