@@ -44,7 +44,8 @@ void CoroutineSession::StartHeartbeatCheck()
             auto now = std::chrono::steady_clock::now();
             auto duration = std::chrono::duration_cast<std::chrono::seconds>(now - _last_message_time).count();
 
-            if (duration > 60) {
+            if (duration > 60)
+            {
                 LOG_WARN << "Client heartbeat timeout! Force Close. UUID: " << GetUuid() << std::endl;
                 Close();
                 _server->DelSessionByUuid(_uuid);

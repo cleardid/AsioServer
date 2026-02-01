@@ -54,22 +54,26 @@ void MsgNode::BuildSendBuffer()
 // 输出方法
 void MsgNode::Print() const
 {
-    std::ostringstream oss;
-    // 设置格式化：十六进制大写、补零对齐
-    oss << std::hex << std::uppercase << std::setfill('0');
+    // 非心跳服务，打印消息头和消息体
+    if (_header.serviceId != SERVICE_HEART)
+    {
+        std::ostringstream oss;
+        // 设置格式化：十六进制大写、补零对齐
+        oss << std::hex << std::uppercase << std::setfill('0');
 
-    // 逐字段格式化输出（字段名 + 值 + 单位/说明）
-    oss << "MessageHeader ["
-        << "魔数=0x" << std::setw(4) << static_cast<uint32_t>(this->_header.magic) << ", "
-        << "协议版本=" << std::dec << this->_header.version << ", "
-        << "服务ID=" << this->_header.serviceId << ", "
-        << "命令ID=" << this->_header.cmdId << ", "
-        << "消息体长度=" << this->_header.length << "字节, "
-        << "请求序号=" << this->_header.seq
-        << "]";
+        // 逐字段格式化输出（字段名 + 值 + 单位/说明）
+        oss << "MessageHeader ["
+            << "魔数=0x" << std::setw(4) << static_cast<uint32_t>(this->_header.magic) << ", "
+            << "协议版本=" << std::dec << this->_header.version << ", "
+            << "服务ID=" << this->_header.serviceId << ", "
+            << "命令ID=" << this->_header.cmdId << ", "
+            << "消息体长度=" << this->_header.length << "字节, "
+            << "请求序号=" << this->_header.seq
+            << "]";
 
-    LOG_INFO << oss.str() << std::endl;
-    // 转为
-    LOG_INFO << "\n"
-             << this->_body.data() << std::endl;
+        LOG_INFO << oss.str() << std::endl;
+        // 转为
+        LOG_INFO << "\n"
+                 << this->_body.data() << std::endl;
+    }
 }
