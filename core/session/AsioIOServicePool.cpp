@@ -3,7 +3,7 @@
 
 #include "../../infra/log/Logger.h"
 
-#include "../../config/ConfigReader.h"
+#include "../../config/ConfigManager.h"
 
 #include <filesystem>
 #include <fstream>
@@ -62,10 +62,8 @@ AsioIOServicePool &AsioIOServicePool::GetInstance()
 
     try
     {
-        // 创建配置文件读取器
-        auto configReader = std::make_shared<ConfigReader>("../config/server.json");
         // 首先尝试获取配置文件中的线程池大小
-        auto setSize = configReader->GetUInt("thread_pool_size").value_or(maxSize / 2);
+        auto setSize = ConfigManager::GetInstance().GetThreadPoolSize();
 
         if (setSize > 0 && setSize <= maxSize)
         {
@@ -76,9 +74,6 @@ AsioIOServicePool &AsioIOServicePool::GetInstance()
             maxSize /= 2;
             LOG_WARN << "Invalid thread pool size in config file, use default value: " << maxSize << std::endl;
         }
-
-        // 释放配置文件读取器
-        configReader.reset();
     }
     catch (const std::exception &e)
     {

@@ -45,6 +45,7 @@ add_executable(${PROJECT_NAME}
     ./app/server_coroutine/main.cpp
 
     ./config/ConfigReader.cpp
+    ./config/ConfigManager.cpp
 
     ./core/logic/LogicSystem.cpp
     ./core/message/MsgNode.cpp
