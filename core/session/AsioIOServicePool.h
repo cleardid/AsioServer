@@ -40,7 +40,8 @@ private:
     std::vector<IOService> _ioServices;
     std::vector<WorkPtr> _works;
     std::vector<std::thread> _threads;
-    std::size_t _nextIndex;
+    // 原子变量，用于记录下一个 IOService 的索引，避免竞争
+    std::atomic<std::size_t> _nextIndex;
     std::size_t _maxSize;
 };
 
