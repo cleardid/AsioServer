@@ -11,8 +11,8 @@
 
 #include "../../core/common/Const.h" // 获取心跳服务ID
 
-CoroutineSession::CoroutineSession(boost::asio::io_context &ioc, CServer *server)
-    : CSession(ioc, server),
+CoroutineSession::CoroutineSession(boost::asio::io_context &ioc, boost::asio::ip::tcp::socket socket, CServer *server)
+    : CSession(ioc, std::move(socket), server),
       _deadline(ioc) // 初始化定时器
 {
     // 初始化最后活动时间

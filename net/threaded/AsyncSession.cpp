@@ -7,8 +7,8 @@
 
 #include "../../infra/log/Logger.h"
 
-AsyncSession::AsyncSession(boost::asio::io_context &ioc, CServer *server)
-    : CSession(ioc, server)
+AsyncSession::AsyncSession(boost::asio::io_context &ioc, boost::asio::ip::tcp::socket socket, CServer *server)
+    : CSession(ioc, std::move(socket), server)
 {
 }
 

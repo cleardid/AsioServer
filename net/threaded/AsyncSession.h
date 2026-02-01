@@ -9,7 +9,7 @@
 class AsyncSession : public CSession
 {
 public:
-    AsyncSession(boost::asio::io_context &ioc, CServer *server);
+    AsyncSession(boost::asio::io_context &ioc, boost::asio::ip::tcp::socket socket, CServer *server);
     // 重写父类方法
     void Start() override;
 

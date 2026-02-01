@@ -34,13 +34,13 @@ public:
 private:
     // 开始监听
     // 协程方式
-    void StartCoroutineAccpet(bool isCreateFunc = false);
+    void StartCoroutineAccpet();
     // 异步方式
-    void StartAsyncAccpet(bool isCreateFunc = false);
+    void StartAsyncAccpet();
     // 处理接收操作
-    void HandleAccpet(std::shared_ptr<CSession>, const boost::system::error_code &error);
+    // void HandleAccpet(std::shared_ptr<CSession>, const boost::system::error_code &error);
     // 辅助启动方法
-    void AssistStart(bool isCreateFunc = false);
+    // void AssistStart(bool isCreateFunc = false);
 
     // 私有属性
     // 上下文
@@ -55,6 +55,9 @@ private:
     std::mutex _mutex;
     // 服务类型
     ASIO_TYPE _type;
+
+    // 是否为第一次创建
+    bool _isFirstCreate = true;
 };
 
 #endif // CSERVER_H

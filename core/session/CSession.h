@@ -21,7 +21,7 @@ class CSession : public std::enable_shared_from_this<CSession>
 {
 public:
     // 构造函数
-    CSession(boost::asio::io_context &ioc, CServer *server);
+    CSession(boost::asio::io_context &ioc, boost::asio::ip::tcp::socket socket, CServer *server);
     // 虚析构函数
     virtual ~CSession();
 

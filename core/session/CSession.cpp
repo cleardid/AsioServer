@@ -8,10 +8,10 @@
 #include "../../services/CommunicationService/ClientInfo.h"
 #include "../../services/CommunicationService/ClientManager.h"
 
-CSession::CSession(boost::asio::io_context &ioc, CServer *server)
+CSession::CSession(boost::asio::io_context &ioc, boost::asio::ip::tcp::socket socket, CServer *server)
     : _ioc(ioc),
       _server(server),
-      _socket(ioc),
+      _socket(std::move(socket)), // 使用移动语义
       _bStop(false),
       _clientInfo(nullptr)
 {

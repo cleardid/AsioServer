@@ -13,7 +13,7 @@ namespace this_coro = boost::asio::this_coro;
 class CoroutineSession : public CSession
 {
 public:
-    CoroutineSession(boost::asio::io_context &ioc, CServer *server);
+    CoroutineSession(boost::asio::io_context &ioc, boost::asio::ip::tcp::socket socket, CServer *server);
     // 重写父类方法
     void Start() override;
 
