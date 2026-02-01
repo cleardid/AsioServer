@@ -85,14 +85,22 @@ void CServer::HandleAccpet(std::shared_ptr<CSession> newSession, const boost::sy
         std::lock_guard<std::mutex> lock(this->_mutex);
         // 加入字典
         this->_sessionMap.insert(std::make_pair(newSession->GetUuid(), newSession));
+        // 正常继续 接收连接
+        AssistStart();
     }
     else
     {
         LOG_WARN << "HandleAccpet Get Error " << error.message() << std::endl;
-    }
 
-    // 继续接收连接
-    AssistStart();
+        // 特殊处理文件描述符耗尽的情况
+        if (error == boost::asio::error::no_descriptors)
+        {
+            // 休眠 100ms 再重试，避免 CPU 空转
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+        // 继续接收连接
+        AssistStart();
+    }
 }
 
 void CServer::AssistStart(bool isCreateFunc)
