@@ -197,6 +197,8 @@ boost::asio::awaitable<void> CommunicationService::OnSendCallBack(std::shared_pt
 
             // 回传结果
             session->Send(hdr, resp);
+            // 直接返回
+            co_return;
         }
 
         // 组装 JSON 信息
